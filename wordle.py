@@ -44,7 +44,7 @@ def new_wordlist(words=commonwords,guesses=[]):
 
 # save the latest guesses 
 def save_guesses(guesses):
-    lines=open('prevwords.txt').readlines()
+    lines=open('wordlog.txt').readlines()
     todate=datetime.date.today().strftime("%m/%d")     
     word=guesses[-1][0]
     line=todate+" - #"+str(len(lines))+"("+str(len(guesses))+"): "+word+"\n"
