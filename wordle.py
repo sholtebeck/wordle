@@ -2,6 +2,7 @@ import random, datetime
 wordlines=open('wordle5.txt').readlines()
 commonwords=wordlines[0].strip() 
 uncommonwords=wordlines[1].strip()      
+allwords=commonwords+uncommonwords
 wordlist=[commonwords[x:x+5] for x in range(0,len(commonwords),5) if len(set(commonwords[x:x+5]))==5]
 letters=[''.join(w[i] for w in wordlist) for i in range(5)]
 percent={w:round(commonwords.count(w)/len(commonwords),3) for w in set(commonwords)}
@@ -33,7 +34,7 @@ def new_wordlist(words=commonwords,guesses=[]):
                 wordlist=[w for w in wordlist if w[x]==word[x]]
             elif guess[x]=='Y':
                 wordlist=[w for w in wordlist if word[x] in w and word[x]!=w[x]]
-            elif guess[x]=='R':
+            elif guess[x]=='R' and word.count(word[x])<2:
                 wordlist=[w for w in wordlist if word[x] not in w]
             elif guess[x]=='-':
                 wordlist=[w for w in wordlist if len(w)==len(set(w))]
@@ -62,8 +63,8 @@ def save_guesses(guesses):
         q=o.write(''.join(uwords))
         o.close()      
 
-def play_wordle():
-    wordlist,guesses,found=new_wordlist(commonwords),[],False
+def play_wordle(words=commonwords):
+    wordlist,guesses,found=new_wordlist(words),[],False
     wordlist.sort(key=wordscore)
     while not found:
         print(len(wordlist),"possible words",wordlist[-5:])
@@ -78,7 +79,7 @@ def play_wordle():
             found=result.upper()=='GGGGG'
         else:
             print("invalid word length")    
-        wordlist=new_wordlist(commonwords,guesses)
+        wordlist=new_wordlist(words,guesses)
         wordlist.sort(key=wordscore)
     if found:
         print("found",guesses[-1][0],"in",len(guesses),'guesses')
