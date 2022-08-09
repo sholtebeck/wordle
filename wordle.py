@@ -3,13 +3,14 @@ wordlines=open('wordle5.txt').readlines()
 commonwords=wordlines[0].strip() 
 uncommonwords=wordlines[1].strip()      
 allwords=commonwords+uncommonwords
+wordlines=[w.strip().split()[-1] for w in open('wordlog.txt').readlines()]
+#wordlist=[w for w in wordlines if len(w)==5]
 wordlist=[commonwords[x:x+5] for x in range(0,len(commonwords),5) if len(set(commonwords[x:x+5]))==5]
 letters=[''.join(w[i] for w in wordlist) for i in range(5)]
-percent={w:round(commonwords.count(w)/len(commonwords),3) for w in set(commonwords)}
-counts={w:[letters[i].count(w) for i in range(5)] for w in percent.keys()}
+percent= {letter:[len([word for word in wordlist if word[k]==letter]) for k in range(5)] for letter in set(commonwords)}
 
 def wordscore(word):
-    return sum(percent[w] for w in set(word))
+    return sum([percent[word[k]][k] for k in range(5)])
 
 def random_word(words=commonwords):
     wordlist=new_wordlist(words)  
