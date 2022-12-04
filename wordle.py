@@ -49,7 +49,7 @@ def save_guesses(guesses):
     lines=open('wordlog.txt').readlines()
     todate=datetime.date.today().strftime("%m/%d/%y")     
     word=guesses[-1][0]
-    line=todate+" - #"+str(len(lines))+"("+str(len(guesses))+"): "+word+"\n"
+    line=todate+" #"+str(len(lines))+"("+str(len(guesses))+"): "+word+"\n"
     o=open('wordlog.txt','a')
     p=o.write(line)
     o.close()
