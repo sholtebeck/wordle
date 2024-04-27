@@ -1,7 +1,8 @@
+#wordle functions
 import random, datetime
-wordlines=open('wordle5.txt').readlines()
-commonwords=wordlines[0].strip() 
-uncommonwords=wordlines[1].strip()      
+wordlines=open('./wordle5.txt').readlines()
+commonwords=wordlines[0].strip()
+uncommonwords=wordlines[1].strip()
 allwords=commonwords+uncommonwords
 wordlines=[w.strip().split()[-1] for w in open('wordlog.txt').readlines()]
 #wordlist=[w for w in wordlines if len(w)==5]
@@ -13,7 +14,7 @@ def wordscore(word):
     return sum([percent[word[k]][k] for k in range(5)])
 
 def random_word(words=commonwords):
-    wordlist=new_wordlist(words)  
+    wordlist=new_wordlist(words)
     return wordlist[random.randrange(len(wordlist))]
 
 def get_guess(secret,guess):
@@ -29,6 +30,7 @@ def get_guess(secret,guess):
 
 def new_wordlist(words=commonwords,guesses=[]):
     wordlist=[words[x:x+5] for x in range(0,len(words),5)]
+    wordlist.sort(key=wordscore)
     for word,guess in guesses:
         for x in range(len(word)):
             if guess[x]=='G':
@@ -44,10 +46,10 @@ def new_wordlist(words=commonwords,guesses=[]):
     else:
         return new_wordlist(uncommonwords,guesses)
 
-# save the latest guesses 
+# save the latest guesses
 def save_guesses(guesses):
     lines=open('wordlog.txt').readlines()
-    todate=datetime.date.today().strftime("%m/%d/%y")     
+    todate=datetime.date.today().strftime("%m/%d/%y")
     word=guesses[-1][0]
     line=todate+" #"+str(len(lines))+"("+str(len(guesses))+"): "+word+"\n"
     o=open('wordlog.txt','a')
@@ -62,7 +64,7 @@ def save_guesses(guesses):
         o=open("wordle5.txt","w")
         p=o.write(''.join(cwords)+"\n")
         q=o.write(''.join(uwords))
-        o.close()      
+        o.close()
 
 def play_wordle(words=commonwords):
     wordlist,guesses,found=new_wordlist(words),[],False
@@ -79,14 +81,14 @@ def play_wordle(words=commonwords):
             guesses.append((word,result.upper()))
             found=result.upper()=='GGGGG'
         else:
-            print("invalid word length")    
+            print("invalid word length")
         wordlist=new_wordlist(words,guesses)
         wordlist.sort(key=wordscore)
     if found:
         print("found",guesses[-1][0],"in",len(guesses),'guesses')
-        save_guesses(guesses)        
-            
-print("Let's Play WORDLE") 
-play_wordle()
-		
-      
+        save_guesses(guesses)
+
+if __name__ == '__main__':
+    print("Let's Play WORDLE")
+    play_wordle()
+
