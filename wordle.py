@@ -1,10 +1,11 @@
 #wordle functions
 import random, datetime
+#from wordb import insert_word
 wordlines=open('./wordle5.txt').readlines()
 commonwords=wordlines[0].strip()
 uncommonwords=wordlines[1].strip()
 allwords=commonwords+uncommonwords
-wordlines=[w.strip().split()[-1] for w in open('wordlog.txt').readlines()]
+wordloglines=[w.strip().split() for w in open('wordlog.txt').readlines()][-10:]
 #wordlist=[w for w in wordlines if len(w)==5]
 wordlist=[commonwords[x:x+5] for x in range(0,len(commonwords),5) if len(set(commonwords[x:x+5]))==5]
 letters=[''.join(w[i] for w in wordlist) for i in range(5)]
@@ -12,6 +13,21 @@ percent= {letter:[len([word for word in wordlist if word[k]==letter]) for k in r
 
 def wordscore(word):
     return sum([percent[word[k]][k] for k in range(5)])
+    
+def wordsort(word):
+    return ''.join(sorted(w for w in word))    
+
+def lastnwords(n=10):
+    wordloglines=[w.strip().split() for w in open('./wordlog.txt').readlines()][-n:]
+    wordloglines.sort(reverse=True)
+    return [{"date":w[0],"word":w[2],"score":w[1][-3]} for w in wordloglines]
+
+def matching_words(word):
+    sortword=wordsort(word)
+    outword=""
+    for inline in open('./wordlist.txt').readlines():
+        outword+=" ".join([inword for inword in inline.strip().split() if wordsort(inword)==sortword])
+    return outword
 
 def random_word(words=commonwords):
     wordlist=new_wordlist(words)
@@ -49,12 +65,14 @@ def new_wordlist(words=commonwords,guesses=[]):
 # save the latest guesses
 def save_guesses(guesses):
     lines=open('wordlog.txt').readlines()
-    todate=datetime.date.today().strftime("%m/%d/%y")
+    todate=datetime.date.today().strftime("%Y-%m-%d")
     word=guesses[-1][0]
     line=todate+" #"+str(len(lines))+"("+str(len(guesses))+"): "+word+"\n"
     o=open('wordlog.txt','a')
     p=o.write(line)
-    o.close()
+    o.close() 
+    #dbwords=insert_word(word,len(guesses),todate)
+    dbwords=lastnwords(5)
     cwords=new_wordlist(commonwords)
     uwords=new_wordlist(uncommonwords)
     if word in cwords:
@@ -65,6 +83,7 @@ def save_guesses(guesses):
         p=o.write(''.join(cwords)+"\n")
         q=o.write(''.join(uwords))
         o.close()
+    return dbwords
 
 def play_wordle(words=commonwords):
     wordlist,guesses,found=new_wordlist(words),[],False

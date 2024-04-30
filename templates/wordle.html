@@ -46,7 +46,12 @@ Guess #{{ guessno }}: <input type="text" size="5" name="word"> Result#{{ guessno
 
 </form>
 {% else %}
-FOUND {{ foundword }} in {{guessno-1 }} guesses!
+FOUND {{ dbwords[0].word }} in {{dbwords[0].score }} guesses!
+<p />
+<h3>Last {{ dbwords|length }} wordles</h3>
+{% for dbword in dbwords %}
+{{dbword.date}} {{dbword.word}} ({{dbword.score}})
+{% endfor %}
 {% endif %}
 </body>
 </html>
