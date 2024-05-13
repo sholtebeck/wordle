@@ -27,11 +27,11 @@ body {
  <h2>Jumble   <a href="/wordle">Wordle</a></h2>
 
 <form action="/jumble" method="post">
-Scrambled Word: <input type="text" size="5" name="inword" value="{{ inword }}"> <input type="submit" value="Find" />
+Jumbled Word: <input type="text" size="5" name="inword" value="{{ inword }}"> <input type="submit" value="Find" />
 </form>
 <p />
 {% if outword %}
-Unscrambled Word: {{ outword }}
+Unjumbled Word: {{ outword }}
 {% endif %}
 </body>
 </html>

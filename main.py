@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template
 from wordle import commonwords, new_wordlist, save_guesses, wordscore, matching_words
+from baseball import filters,get_players,get_description
 
 app = Flask(__name__)
 guesses=[]
@@ -17,6 +18,15 @@ def convert(guesses):
 def hello_world():
     from datetime import datetime 
     return render_template('index.html',dotw=datetime.today().strftime("%A"))
+
+@app.route('/grid', methods=['GET','POST'])
+def grid():
+    players=description=form=None
+    if request.method =="POST":
+        form=request.form
+        description=form.get("filter1")+" and "+form.get("filter2")
+        players=[]
+    return render_template('grid.html',description=description,form=form,filters=filters,players=players)
 
 @app.route('/jumble', methods=['GET','POST'])
 def jumble():
