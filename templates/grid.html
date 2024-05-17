@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <style>
+body,select {
+    font-family:'Courier New', Courier, monospace;
+}
+ .dot {
+     height: 25px;
+     width: 25px;
+     background-color: #bbb;
+     border-radius: 50%;
+     display: inline-block;
+ }
+ .R {
+    background-color: red;
+ }
+ .G {
+    background-color: green;
+ }
+ .Y {
+    background-color: yellow;
+ }
+</style>
+</head>
+<body>
+ <h2><a href="https://www.immaculategrid.com/">Immaculate Grid</a>: Baseball Stats 1945-2022</h2>
+<form action="/grid" method="post">
+    <label for="filter1">Filter #1:</label>
+    <select  name="filter1" id="filter1" value="{{filters[0]}}">
+        <option value= "">== Select a Filter ==</option>"
+      <optgroup label="Teams">
+        {% for team in teams %}
+        <option value= "{{team[0]}}">{{team[1]}}</option>"
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Positions">
+        {% for pos in positions %}
+        <option value= "{{pos[0]}}">{{pos[1]}}</option>"
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Pitching Stats">
+        {% for pstat in pitchstats %}
+        <option value= "{{pstat[0]}}">{{pstat[1]}}</option>"
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Batting Stats">
+        {% for bstat in batstats %}
+        <option value= "{{bstat[0]}}">{{bstat[1]}}</option>"
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Awards/Misc">
+        {% for award in awards %}
+        <option value= "{{award[0]}}">{{award[1]}}</option>"
+        {% endfor %}   
+      </optgroup>  
+    </select>
+    <label for="filter2">Filter #2:</label>
+    <select  name="filter2" id="filter2" value="{{filters[1]}}">
+        <option value= "">== Select a Filter ==</option>"
+      <optgroup label="Teams">
+        {% for team in teams %}
+        <option value= "{{team[0]}}">{{team[1]}}</option>"
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Positions">
+        {% for pos in positions %}
+        <option value= "{{pos[0]}}">{{pos[1]}}</option>"
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Pitching Stats">
+        {% for pstat in pitchstats %}
+        <option value= "{{pstat[0]}}">{{pstat[1]}}</option>"
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Batting Stats">
+        {% for bstat in batstats %}
+        <option value= "{{bstat[0]}}">{{bstat[1]}}</option>"
+        {% endfor %}
+      </optgroup>
+      <optgroup label="Awards/Misc">
+        {% for award in awards %}
+        <option value= "{{award[0]}}">{{award[1]}}</option>"
+        {% endfor %}   
+      </optgroup>  
+    </select>
+<input type="submit" value="Submit" /> 
+</form>
+{% if description %}
+<p/>
+Found {{ players|length }} {{description}}
+<ol>
+{% for player in players %}
+<li>{{ player[0] }} {{player[1]}} </li>
+{% endfor %}
+</ol>
+{% endif %}
+</body>
+</html>
