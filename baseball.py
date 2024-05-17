@@ -7,7 +7,7 @@ csvfiles=glob.glob(core_folder+"\\*csv")
 tables={c.split('\\')[-1][:-4]:c for c in csvfiles}
 
 
-awards=[('as','All-Star'),('cya', 'Cy Young Award'), ('gg', 'Gold Glove'), ('hof', 'Hall Of Fame'), ('mvp', 'Most Valuable Player'),('roty', 'Rookie of the Year'), ('ss', 'Silver Slugger'), ('tc', 'Triple Crown'), ('wsc','World Series Champ WS Roster'),('wsmvp', 'World Series MVP')]
+awards=[('as','All-Star'),('cya', 'Cy Young Award'), ('gg', 'Gold Glove'), ('hof', 'Hall Of Fame'), ('mvp', 'Most Valuable Player'),('one','Only One Team'),('roty', 'Rookie of the Year'), ('ss', 'Silver Slugger'), ('tc', 'Triple Crown'), ('wsc','World Series Champ WS Roster'),('wsmvp', 'World Series MVP')]
 teams=[('ARI', 'Arizona Diamondbacks'), ('ATL', 'Atlanta Braves'), ('BAL', 'Baltimore Orioles'), ('BOS', 'Boston Red Sox'), ('CHN', 'Chicago Cubs'), ('CHA', 'Chicago White Sox'), ('CIN', 'Cincinnati Reds'), ('CLE', 'Cleveland Guardians'), ('COL', 'Colorado Rockies'), ('DET', 'Detroit Tigers'), ('HOU', 'Houston Astros'), ('KCR', 'Kansas City Royals'), ('LAA', 'Los Angeles Angels'), ('LAN', 'Los Angeles Dodgers'), ('MIA', 'Miami Marlins'), ('MIL', 'Milwaukee Brewers'), ('MIN', 'Minnesota Twins'), ('NYN', 'New York Mets'), ('NYA', 'New York Yankees'), ('OAK', 'Oakland Athletics'), ('PHI', 'Philadelphia Phillies'), ('PIT', 'Pittsburgh Pirates'), ('SDN', 'San Diego Padres'), ('SFN', 'San Francisco Giants'), ('SEA', 'Seattle Mariners'), ('SLN', 'St. Louis Cardinals'), ('TBA', 'Tampa Bay Rays'), ('TEX', 'Texas Rangers'), ('TOR', 'Toronto  Blue Jays'), ('WAS', 'Washington Nationals')]
 pitchstats=[('ERAc', '≤ 3.00 ERA (Career)'), ('ERAs', '≤ 3.00 ERA (Season)'), ('SV300c', '300+ Saves (Career)'),('SV30s', '30+ Saves (Season)'),('SV40s', '40+ Saves (Season)'),('SO3000c', '3000+ Strikeouts (Career)'), ('SO200s', '200+ Strikeouts (Season)'),('W300c', '300+ Wins (Career)'),('W10s', '10+ Wins (Season)'),('W20s', '20+ Wins (Season)')]
 batstats=[("AVGc",".300+ AVG (Career)"),("AVGs",".300+ AVG (Season)"),("H2000c","2000+ Hits (Career)"),("H3000c","3000+ Hits (Career)"),("H200s","200+ Hits (Season)"),("HR300c","300+ HR (Career)"),("HR400c","400+ HR (Career)"),("HR500c","500+ HR (Career)"),("HR40s","40+ HR (Season)"),("SB30s","30+ SB (Season)"), ("HS30s","30+ HR / 30+ SB (Season)"),("2B40s","40+ Doubles (Season)"),("RBI100s","100+ RBI (Season)"),("R100s","100+ Runs Scored (Season)")]
@@ -84,14 +84,23 @@ def team_overlaps(teams):
     return baseball_query(sql)
 
 def team_positions(team,pos): 
-    sql="select distinct p.playerName,p.years from players p join fielders f on f.playerID=p.playerID where f.teamID='"+team+"' and f.POS='"+pos+"' order by p.prank desc"
+    if pos=="OF":
+        sql="select distinct p.playerName,p.years from players p join fielders f on f.playerID=p.playerID where f.teamID='"+team+"' and f.POS like '%F' order by p.prank desc"
+    else:
+        sql="select distinct p.playerName,p.years from players p join fielders f on f.playerID=p.playerID where f.teamID='"+team+"' and f.POS='"+pos+"' order by p.prank desc"
     return baseball_query(sql)
 
 def team_awards(team,award): 
     if award=='hof':
         sql="select playerName,years from players where teams like '%"+team+"%' and hof=1"
+    elif award=='one':
+        return only_one_team(team)
     else:
         sql="select distinct p.playerName,p.years from players p join awards a on a.playerID=p.playerID where a.teamID='"+team+"' and a.awardID='"+award+"' order by p.prank desc"
+    return baseball_query(sql)
+
+def pos_awards(pos,award): 
+    sql="select playerName,years from players where awards like '%"+award+"%' and positions like '%"+pos+"%' order by prank desc"
     return baseball_query(sql)
 
 def two_awards(award1,award2): 
@@ -126,11 +135,11 @@ def season_batting_stats(team,stat):
     elif stat[:2]=="2B":
         criteria = " AND b.DB>="+stat[2:]
         stat="DB"
-    sql="select distinct p.playerName,max(b."+stat+") as val from players p join batters b on b.playerID=p.playerID where b.teamID='"+team+"' "+criteria+" group by p.playerName"
+    sql="select p.playerName,max(b."+stat+") as val from players p join batters b on b.playerID=p.playerID where b.teamID='"+team+"' "+criteria+" group by p.playerName order by 2"
     return baseball_query(sql)
     
-# Career Batting Stats (AVG,H,HR)
-def career_batting_stats(team,stat):
+# Career Batting Stats (AVG,H,HR) by team/pos/award
+def career_batting_stats(tpos,stat):
     criteria=""
     sstat=stat
     if stat=="AVG":
@@ -142,7 +151,13 @@ def career_batting_stats(team,stat):
     elif stat[0]=="H":
         criteria = " AND p.H>="+stat[1:]
         sstat='H'
-    sql="select p.playerName,p.years,p."+sstat+" from players p where p.bp='B' and p.teams like '%"+team+"%' "+criteria
+    if tpos in [t[0] for t in teams]:
+        sql="select p.playerName,p."+sstat+" from players p where p.bp='B' and p.teams like '%"+tpos+"%' "+criteria
+    elif tpos in [t[0] for t in positions]:
+        sql="select p.playerName,p."+sstat+" from players p where p.bp='B' and p.positions like '%"+tpos+"%' "+criteria    
+    elif tpos in [t[0] for t in awards]:
+        sql="select p.playerName,p."+sstat+" from players p where p.bp='B' and p.awards like '%"+tpos+"%' "+criteria
+    sql=sql+" order by 2"
     return baseball_query(sql)
     
 def batting_stats(team,stat):
@@ -165,7 +180,7 @@ def season_pitching_stats(team,stat):
     elif stat[0]=="W":
         criteria = " AND q.W>="+stat[1:]
         sstat="W"
-    sql="select distinct p.playerName,max(q."+sstat+") as val from players p join pitchers q on q.playerID=p.playerID where q.teamID='"+team+"' "+criteria+" group by p.playerName"
+    sql="select p.playerName,max(q."+sstat+") as val from players p join pitchers q on q.playerID=p.playerID where q.teamID='"+team+"' "+criteria+" group by p.playerName order by 2"
     return baseball_query(sql)
 
 def career_pitching_stats(team,stat):
@@ -173,7 +188,7 @@ def career_pitching_stats(team,stat):
     criteria=""
     sindex=-1
     if stat=="ERA":
-        criteria = " AND p.AVG<=300"
+        criteria +=" AND p.AVG<=300"
     elif stat[:2]=="SV":
         sindex=pstats.index("SV")
         svalue=int(stat[2:])
@@ -183,12 +198,17 @@ def career_pitching_stats(team,stat):
     elif stat[0]=="W":
         sindex=pstats.index("W")
         svalue=int(stat[1:])
-    sql="select p.playerName,p.years,p.stats from players p where p.bp='P' and teams like '%"+team+"%' "+criteria
+    if team in [t[0] for t in teams]:
+        criteria+=" and teams like '%"+team+"%' "
+    if team in [t[0] for t in awards]:
+        criteria+=" and awards like '%"+team+"%' "       
+    sql="select p.playerName,p.years,p.stats from players p where p.bp='P' "+criteria
     pitchers=baseball_query(sql)
     if sindex>=0:
         pitchers=[(p[0],int(p[2].split("-")[sindex])) for p in pitchers if p[2].count("-")==12 and int(p[2].split("-")[sindex])>=svalue]
     else:
         pitchers=[p[:2] for p in pitchers]
+    pitchers.sort(key=lambda p:p[1])
     return pitchers
 
 
@@ -221,9 +241,21 @@ def get_players(filters):
     #Team + Batting Stats
     elif len(tfilters)==1 and len(bfilters)==1:
         return batting_stats(tfilters[0][0],bfilters[0][0])
+    #Position + Batting Stats
+    elif len(pfilters)==1 and len(bfilters)==1:
+        return batting_stats(pfilters[0][0],bfilters[0][0])
+    #Position + Award
+    elif len(pfilters)==1 and len(afilters)==1:
+        return pos_awards(pfilters[0][0],afilters[0][0])
+    #Award + Batting Stats
+    elif len(afilters)==1 and len(bfilters)==1:
+        return batting_stats(afilters[0][0],bfilters[0][0])
     #Team + Pitching Stats
     elif len(tfilters)==1 and len(sfilters)==1:
         return pitching_stats(tfilters[0][0],sfilters[0][0])
+    #Award + Pitching Stats
+    elif len(afilters)==1 and len(sfilters)==1:
+        return pitching_stats(afilters[0][0],sfilters[0][0])
     return []
 
 def get_description(filters):
@@ -241,7 +273,12 @@ def get_description(filters):
         description=tfilters[0]+' who have played '+pfilters[0]
     if len(tfilters)==1 and len(bfilters)==1:
         description=tfilters[0]+' who have '+bfilters[0]
-    #Team + Pitching Stats
+    if len(pfilters)==1 and len(bfilters)==1:
+        description=pfilters[0]+' who have '+bfilters[0]
+    if len(pfilters)==1 and len(afilters)==1:
+        description=pfilters[0]+' who have '+afilters[0]
+    if len(afilters)==1 and len(sfilters)==1:
+        description=afilters[0]+' who have '+sfilters[0]    
     if len(tfilters)==1 and len(sfilters)==1:
         description=tfilters[0]+' who have '+sfilters[0]
     return description
